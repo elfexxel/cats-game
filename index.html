@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chruno33 & Elfexxel - Gerçek Aşk</title>
+    <title>Chruno33 & Elfexxel - Kusursuz Versiyon</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
         * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
@@ -15,12 +15,12 @@
         #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; pointer-events: none; }
         .msg { background: rgba(0,0,0,0.6); color: #fff; padding: 12px; border-radius: 10px; font-size: 18px; margin: 5px; opacity: 0; transition: opacity 1.5s; border: 1px solid #ff00ea; }
         #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 2000; font-size: 18px; cursor: pointer; }
-        .label { position: absolute; color: white; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; transform: translate(-50%, -200%); pointer-events: none; }
+        .label { position: absolute; color: white; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; transform: translate(-50%, -220%); pointer-events: none; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-<div id="overlay" onclick="startApp()">❤️ Lütfen Buraya Dokun</div>
+<div id="overlay" onclick="startApp()">❤️ Başlamak İçin Dokun</div>
 <div id="ui-layer">Toplanan Güller: <span id="count">0</span> / 33</div>
 
 <div class="controls" id="joystick" style="display:none;">
@@ -53,12 +53,11 @@ function createDetailedCat(color, eyeColor, name) {
     const cat = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({color: color});
 
-    // Gövde (Yatay durması için düzeltildi)
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.5, 4, 12), mat);
+    // Gövde - Dik duruş hatasını önlemek için kapsülün merkezini ayarlıyoruz
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.4, 4, 12), mat);
     body.rotation.x = Math.PI / 2;
     cat.add(body);
 
-    // Kafa
     const headGroup = new THREE.Group();
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), mat);
     headGroup.add(head);
@@ -68,48 +67,37 @@ function createDetailedCat(color, eyeColor, name) {
     const earL = new THREE.Mesh(earGeo, mat); earL.position.set(0.12, 0.25, 0); headGroup.add(earL);
     const earR = earL.clone(); earR.position.x = -0.12; headGroup.add(earR);
 
-    // Gözler (Ön tarafa bakması için Z pozisyonu ayarlandı)
+    // Gözler
     const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
     const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
     const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(0.1, 0.05, 0.25); headGroup.add(eyeL);
     const eyeR = eyeL.clone(); eyeR.position.x = -0.1; headGroup.add(eyeR);
 
-    // Burun
-    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.03), new THREE.MeshBasicMaterial({color: 0xffaaaa}));
-    nose.position.set(0, 0, 0.3); headGroup.add(nose);
-
-    headGroup.position.set(0, 0.25, 0.3);
+    headGroup.position.set(0, 0.25, 0.25);
     cat.add(headGroup);
 
     // Bıyıklar
     const wGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.3);
     const wMat = new THREE.MeshBasicMaterial({color: 0xcccccc});
     for(let i=0; i<4; i++) {
-        const w = new THREE.Mesh(wGeo, wMat);
-        w.rotation.z = Math.PI/2;
-        w.position.set(0, 0.2, 0.6);
-        cat.add(w);
+        const w = new THREE.Mesh(wGeo, wMat); w.rotation.z = Math.PI/2;
+        w.position.set(0, 0.22, 0.5); cat.add(w);
     }
 
-    // Bacaklar
-    const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.3);
-    const legs = [];
+    // Patiler
+    const legGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.25);
     for(let i=0; i<4; i++) {
         const leg = new THREE.Mesh(legGeo, mat);
-        leg.position.set(i % 2 ? 0.12 : -0.12, -0.3, i < 2 ? 0.2 : -0.2);
+        leg.position.set(i % 2 ? 0.12 : -0.12, -0.25, i < 2 ? 0.2 : -0.2);
         cat.add(leg);
-        legs.push(leg);
     }
 
     // Kuyruk
-    const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.4), mat);
-    tail.position.set(0, 0.1, -0.4);
-    tail.rotation.x = -Math.PI/4;
-    cat.add(tail);
+    const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.35), mat);
+    tail.position.set(0, 0.1, -0.4); tail.rotation.x = -Math.PI/4; cat.add(tail);
 
-    // Dudak
-    const lip = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({color: 0xff1493}));
-    lip.position.set(0, 0.15, 0.6); lip.visible = false; cat.add(lip);
+    const lip = new THREE.Mesh(new THREE.SphereGeometry(0.06), new THREE.MeshBasicMaterial({color: 0xff1493}));
+    lip.position.set(0, 0.2, 0.55); lip.visible = false; cat.add(lip);
 
     if(name) {
         const div = document.createElement('div'); div.className = 'label'; div.textContent = name;
@@ -117,8 +105,6 @@ function createDetailedCat(color, eyeColor, name) {
     }
 
     cat.userData.lip = lip;
-    cat.userData.legs = legs;
-    cat.userData.head = headGroup;
     return cat;
 }
 
@@ -136,11 +122,10 @@ function setupScene() {
     scene.add(new THREE.AmbientLight(0xffffff, 2.0));
     const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(5, 10, 5); scene.add(sun);
 
-    // PATİKA
+    // PATİKA (Genişlik: 7 birim)
     path = new THREE.Mesh(new THREE.BoxGeometry(7, 0.3, 200), new THREE.MeshStandardMaterial({color: 0xffffff}));
     path.position.set(0, -0.15, -90); scene.add(path);
 
-    // KEDİLER
     chruno33 = createDetailedCat(0xffa500, 0x5d4037, "chruno33");
     elfexxel = createDetailedCat(0x111111, 0x00ff00, "elfexxel");
     elfexxel.visible = false;
@@ -148,26 +133,27 @@ function setupScene() {
 
     // BUKET
     bouquet = new THREE.Group();
-    const wrap = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.5, 8), new THREE.MeshStandardMaterial({color: 0x8b4513}));
+    const wrap = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 8), new THREE.MeshStandardMaterial({color: 0x8b4513}));
     wrap.rotation.x = Math.PI; bouquet.add(wrap);
-    for(let i=0; i<8; i++) {
-        const flower = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({color: 0xff0000}));
-        flower.position.set(Math.random()*0.2-0.1, 0.3, Math.random()*0.2-0.1);
+    for(let i=0; i<7; i++) {
+        const flower = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshBasicMaterial({color: 0xff0000}));
+        flower.position.set(Math.random()*0.15-0.07, 0.25, Math.random()*0.15-0.07);
         bouquet.add(flower);
     }
     bouquet.visible = false; scene.add(bouquet);
 
-    // GÜLLER (Yolun içinde kalacak şekilde)
+    // GÜLLER (Patikanın tam içine hapsedildi: x aralığı -3 ile 3 arası yapıldı)
     const cols = [0xff0000, 0x800080, 0x111111];
-    for(let i=0; i<35; i++) {
+    for(let i=0; i<36; i++) {
         const r = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshStandardMaterial({color: cols[i%3]}));
-        r.position.set((Math.random()-0.5)*5, 0.2, -i*5.5 - 20);
+        // ÖNEMLİ: Patika genişliği 7 olduğu için x konumunu -2.8 ile 2.8 arası sınırladım.
+        r.position.set((Math.random()-0.5)*5.6, 0.2, -i*5.2 - 20);
         scene.add(r); roses.push(r);
     }
 
     const snowGeo = new THREE.BufferGeometry();
-    const snowP = new Float32Array(1000 * 3);
-    for(let i=0; i<3000; i++) snowP[i] = (Math.random()-0.5)*100;
+    const snowP = new Float32Array(800 * 3);
+    for(let i=0; i<2400; i++) snowP[i] = (Math.random()-0.5)*100;
     snowGeo.setAttribute('position', new THREE.BufferAttribute(snowP, 3));
     snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.08}));
     scene.add(snow);
@@ -185,22 +171,21 @@ function setupScene() {
 function animate() {
     requestAnimationFrame(animate);
     if(phase === "play") {
-        const s = 0.2;
+        const s = 0.22;
         if(moveKeys.up) chruno33.position.z -= s;
         if(moveKeys.down) chruno33.position.z += s;
-        if(moveKeys.left) { chruno33.position.x -= s; chruno33.rotation.y = 0.3; }
-        else if(moveKeys.right) { chruno33.position.x += s; chruno33.rotation.y = -0.3; }
-        else { chruno33.rotation.y = 0; }
+        if(moveKeys.left) chruno33.position.x -= s;
+        if(moveKeys.right) chruno33.position.x += s;
 
-        chruno33.position.x = Math.max(-3, Math.min(3, chruno33.position.x));
+        chruno33.position.x = Math.max(-3.2, Math.min(3.2, chruno33.position.x));
         chruno33.position.z = Math.max(-190, Math.min(5, chruno33.position.z));
-        chruno33.position.y = 0.45;
+        chruno33.position.y = 0.4;
 
         camera.position.lerp(new THREE.Vector3(chruno33.position.x, 2.5, chruno33.position.z + 6), 0.1);
         camera.lookAt(chruno33.position);
 
         roses.forEach(r => {
-            if(r.visible && chruno33.position.distanceTo(r.position) < 0.8) {
+            if(r.visible && chruno33.position.distanceTo(r.position) < 0.85) {
                 r.visible = false; collected++;
                 document.getElementById('count').innerText = Math.min(33, collected);
             }
@@ -208,7 +193,7 @@ function animate() {
 
         if(collected >= 33 && chruno33.position.z < -188) { phase = "final"; triggerFinal(); }
     } else if(phase === "final") {
-        camera.position.lerp(new THREE.Vector3(5, 1.5, -297), 0.02);
+        camera.position.lerp(new THREE.Vector3(5, 1.4, -297.5), 0.025);
         camera.lookAt(0, 1, -300);
     }
     
@@ -233,22 +218,22 @@ function triggerFinal() {
     sea = new THREE.Mesh(new THREE.PlaneGeometry(150, 80), new THREE.MeshStandardMaterial({color: 0x0077be}));
     sea.rotation.x = -Math.PI/2; sea.position.set(0, -0.2, -350); scene.add(sea);
 
-    chruno33.position.set(0, 0.45, -290); chruno33.rotation.y = Math.PI; 
-    elfexxel.position.set(0, 0.45, -310); elfexxel.visible = true; elfexxel.rotation.y = 0;
+    chruno33.position.set(0, 0.4, -290); chruno33.rotation.y = Math.PI; 
+    elfexxel.position.set(0, 0.4, -310); elfexxel.visible = true; elfexxel.rotation.y = 0;
 
     let walk = setInterval(() => {
         chruno33.position.z -= 0.05;
         elfexxel.position.z += 0.05;
         
-        if(chruno33.position.distanceTo(elfexxel.position) < 1.2) {
+        if(chruno33.position.distanceTo(elfexxel.position) < 1.1) {
             clearInterval(walk);
-            // SARILMA HAREKETİ
-            chruno33.rotation.x = -Math.PI/2.5; chruno33.position.y = 0.7;
-            elfexxel.rotation.x = -Math.PI/2.5; elfexxel.position.y = 0.7;
+            // SARILMA VE ÖPÜŞME (Doğru rotasyon)
+            chruno33.rotation.x = -Math.PI/2.8; chruno33.position.y = 0.65;
+            elfexxel.rotation.x = -Math.PI/2.8; elfexxel.position.y = 0.65;
             
             chruno33.userData.lip.visible = true;
             elfexxel.userData.lip.visible = true;
-            bouquet.visible = true; bouquet.position.set(0.4, 1, -300);
+            bouquet.visible = true; bouquet.position.set(0.4, 0.9, -300);
 
             document.getElementById('final-ui').style.display = 'flex';
             setTimeout(() => document.getElementById('m1').style.opacity = 1, 500);
