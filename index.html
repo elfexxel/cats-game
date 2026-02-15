@@ -1,239 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Chruno33 Journey</title>
-
-<style>
-body{
-margin:0;
-overflow:hidden;
-background:#000;
-font-family:cursive;
-touch-action:none;
-}
-
-canvas{
-display:block;
-}
-
-#counter{
-position:absolute;
-top:15px;
-left:15px;
-color:white;
-font-size:22px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For My Love: Chruno33</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Dancing Script', cursive; }
+        #joystick-container { position: fixed; bottom: 50px; left: 50px; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; touch-action: none; }
+        #counter { position: fixed; top: 20px; left: 20px; color: white; font-size: 24px; text-shadow: 2px 2px black; }
+        #final-message { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            color: #8a2be2; font-size: 30px; text-align: center; display: none;
+            background: rgba(0,0,0,0.7); padding: 20px; border-radius: 15px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
-<div id="counter">🌹 0 / 33</div>
-<canvas id="game"></canvas>
+<div id="counter">Güller: 0 / 33</div>
+<div id="joystick-container"></div>
+<div id="final-message"></div>
 
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+<script type="module">
+import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// --- SAHNE VE AYARLAR ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050510); // Gece havası
+scene.fog = new THREE.FogExp2(0x050510, 0.05);
 
-let worldOffset = 0;
-let collected = 0;
-let gameEnd = false;
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-// PLAYER
-let cat = {
-x:200,
-y:canvas.height/2,
-size:35,
-speed:6
-};
+// Işıklandırma
+const ambientLight = new THREE.AmbientLight(0x404040, 2);
+scene.add(ambientLight);
+const moonLight = new THREE.DirectionalLight(0xffffff, 0.5);
+moonLight.position.set(10, 20, 10);
+scene.add(moonLight);
 
-// ROSES
-let roses = [];
-for(let i=0;i<33;i++){
-roses.push({
-x:500 + i*220,
-y:canvas.height/2 + (Math.random()*120-60),
-taken:false
+// --- KAR YAĞIŞI ---
+const snowGeometry = new THREE.BufferGeometry();
+const snowCount = 2000;
+const snowPositions = new Float32Array(snowCount * 3);
+for(let i=0; i<snowCount*3; i++) { snowPositions[i] = (Math.random() - 0.5) * 100; }
+snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+const snowMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+const snow = new THREE.Points(snowGeometry, snowMaterial);
+scene.add(snow);
+
+// --- KARLI PATİKA VE YOL ---
+const floorGeo = new THREE.PlaneGeometry(20, 200);
+const floorMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+// --- KEDİ MODELLEMELERİ (Basit 3D Temsili) ---
+function createCat(bodyColor, eyeColor, name) {
+    const group = new THREE.Group();
+    // Gövde
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.8), new THREE.MeshStandardMaterial({color: bodyColor}));
+    body.position.y = 0.2;
+    group.add(body);
+    // Kafa
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.35), new THREE.MeshStandardMaterial({color: bodyColor}));
+    head.position.set(0, 0.45, 0.4);
+    group.add(head);
+    // Gözler
+    const eyeGeo = new THREE.SphereGeometry(0.05);
+    const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
+    const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(0.1, 0.5, 0.55);
+    const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(-0.1, 0.5, 0.55);
+    group.add(eyeL, eyeR);
+    
+    return group;
+}
+
+const chruno33 = createCat(0xffa500, 0x8b4513, "Chruno33"); // Turuncu, Kahverengi göz
+scene.add(chruno33);
+
+const elfexxel = createCat(0x111111, 0x00ff00, "Elfexxel"); // Siyah, Yeşil göz
+elfexxel.position.set(0, 0, -95); // Yolun sonunda
+scene.add(elfexxel);
+
+// --- GÜLLER ---
+const roses = [];
+const roseColors = [0x800080, 0xff0000, 0x000000]; // Mor, Kırmızı, Siyah
+for(let i=0; i<33; i++) {
+    const rose = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15), 
+        new THREE.MeshStandardMaterial({color: roseColors[i % 3]})
+    );
+    rose.position.set((Math.random()-0.5)*4, 0.1, -i * 2.5 - 5);
+    scene.add(rose);
+    roses.push(rose);
+}
+
+// --- KONTROLLER ---
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let collectedRoses = 0;
+let gameState = "walking"; // walking, ending
+
+// Mobil Kontrol (Basit Dokunmatik Mantığı)
+window.addEventListener('touchstart', (e) => { moveForward = true; });
+window.addEventListener('touchend', (e) => { moveForward = false; });
+
+// --- OYUN DÖNGÜSÜ ---
+function animate() {
+    requestAnimationFrame(animate);
+
+    if(gameState === "walking") {
+        // Kar yağışı hareketi
+        snow.position.y -= 0.05;
+        if(snow.position.y < -10) snow.position.y = 10;
+
+        // Kedi Hareketi (Sadece ileri otomatik gidiş veya joystick eklenebilir)
+        if(moveForward) chruno33.position.z -= 0.15;
+        
+        // Kamera Takibi
+        camera.position.set(chruno33.position.x, chruno33.position.y + 2, chruno33.position.z + 5);
+        camera.lookAt(chruno33.position);
+
+        // Gül Toplama Kontrolü
+        roses.forEach((rose, index) => {
+            if(rose.visible && chruno33.position.distanceTo(rose.position) < 0.6) {
+                rose.visible = false;
+                collectedRoses++;
+                document.getElementById('counter').innerText = `Güller: ${collectedRoses} / 33`;
+            }
+        });
+
+        // Final Sahnesi Geçişi
+        if(collectedRoses >= 33 && chruno33.position.z < -90) {
+            gameState = "ending";
+            startFinalScene();
+        }
+    }
+    
+    renderer.render(scene, camera);
+}
+
+function startFinalScene() {
+    // Burada denizi oluşturup kamerayı zoom yapacağız
+    // Kedilerin birbirine yaklaşması ve öpüşme animasyonu tetiklenecek
+    const msg = document.getElementById('final-message');
+    msg.style.display = "block";
+    msg.innerHTML = "elfexxel'den sevgilim chruno33'e <br> <span style='font-size:50px'>😛</span><br>i luv u";
+    
+    // Zoom ve öpüşme animasyonu için kamera pozisyonu değiştirme
+    camera.position.set(0, 0.5, -93);
+    camera.lookAt(0, 0.5, -95);
+}
+
+animate();
+
+// Ekran boyutunu ayarla
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
-}
 
-// SNOW
-let snow = [];
-for(let i=0;i<120;i++){
-snow.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height,
-speed:1+Math.random()*2
-});
-}
-
-// TOUCH CONTROL
-canvas.addEventListener("touchmove", e=>{
-e.preventDefault();
-
-let touchX = e.touches[0].clientX;
-
-if(touchX > canvas.width/2){
-worldOffset += cat.speed;
-}else{
-worldOffset -= cat.speed;
-}
-
-if(worldOffset < 0) worldOffset = 0;
-
-});
-
-// KEYBOARD TEST
-window.addEventListener("keydown", e=>{
-if(e.key==="ArrowRight") worldOffset += cat.speed;
-if(e.key==="ArrowLeft") worldOffset -= cat.speed;
-});
-
-// PATH
-function drawPath(){
-ctx.fillStyle="#222";
-
-let pathY = canvas.height/2-90;
-
-// world ile kaydır
-ctx.fillRect(-worldOffset,pathY,8000,180);
-}
-
-// SNOW
-function drawSnow(){
-ctx.fillStyle="white";
-
-snow.forEach(s=>{
-ctx.fillRect(s.x,s.y,2,2);
-
-s.y += s.speed;
-
-if(s.y>canvas.height){
-s.y=0;
-s.x=Math.random()*canvas.width;
-}
-});
-}
-
-// CAT
-function drawCat(){
-ctx.fillStyle="orange";
-ctx.beginPath();
-ctx.arc(cat.x,cat.y,cat.size,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillStyle="brown";
-ctx.beginPath();
-ctx.arc(cat.x-10,cat.y-5,5,0,Math.PI*2);
-ctx.arc(cat.x+10,cat.y-5,5,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillStyle="white";
-ctx.font="20px cursive";
-ctx.fillText("chruno33",cat.x-35,cat.y-45);
-}
-
-// ROSES
-function drawRoses(){
-
-roses.forEach(r=>{
-
-if(!r.taken){
-
-let screenX = r.x - worldOffset;
-
-ctx.fillStyle="purple";
-ctx.beginPath();
-ctx.arc(screenX,r.y,14,0,Math.PI*2);
-ctx.fill();
-
-// collision
-let dist = Math.hypot(cat.x-screenX,cat.y-r.y);
-
-if(dist < 40){
-r.taken = true;
-collected++;
-
-document.getElementById("counter").innerText =
-"🌹 "+collected+" / 33";
-
-if(collected===33){
-gameEnd = true;
-}
-}
-}
-});
-}
-
-// SEA SCENE
-function drawSeaScene(){
-
-ctx.fillStyle="#001a33";
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-// waves
-for(let i=0;i<canvas.width;i+=40){
-ctx.fillStyle="blue";
-ctx.fillRect(
-i,
-canvas.height/2 + Math.sin(Date.now()/400 + i)*15,
-40,
-30
-);
-}
-
-// cats
-ctx.fillStyle="orange";
-ctx.beginPath();
-ctx.arc(canvas.width/3,canvas.height/2,50,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillStyle="white";
-ctx.fillText("chruno33",canvas.width/3-40,canvas.height/2-70);
-
-ctx.fillStyle="black";
-ctx.beginPath();
-ctx.arc(canvas.width/1.7,canvas.height/2,50,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillStyle="green";
-ctx.beginPath();
-ctx.arc(canvas.width/1.7-15,canvas.height/2-5,6,0,Math.PI*2);
-ctx.arc(canvas.width/1.7+15,canvas.height/2-5,6,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillStyle="purple";
-ctx.font="28px cursive";
-ctx.fillText(
-"elfexxel'den sevgilim chruno33'e",
-canvas.width/2-200,
-100
-);
-}
-
-// LOOP
-function update(){
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-if(!gameEnd){
-drawPath();
-drawSnow();
-drawRoses();
-drawCat();
-}else{
-drawSeaScene();
-}
-
-requestAnimationFrame(update);
-}
-
-update();
 </script>
-
 </body>
 </html>
