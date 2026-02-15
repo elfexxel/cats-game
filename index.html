@@ -6,116 +6,124 @@
     <title>Chruno33 & Elfexxel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; touch-action: none; }
-        #ui-layer { position: fixed; top: 15px; width: 100%; text-align: center; color: #ff00ea; font-size: 24px; z-index: 100; font-weight: bold; text-shadow: 2px 2px 4px #000; pointer-events: none; }
-        .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 75px); grid-gap: 15px; z-index: 500; }
-        .btn { width: 75px; height: 75px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 35px; user-select: none; }
-        .up { grid-column: 2; } .left { grid-column: 1; } .down { grid-column: 2; } .right { grid-column: 3; }
-        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
-        .msg { background: rgba(0,0,0,0.6); color: #fff; padding: 12px 20px; border-radius: 15px; font-size: 22px; margin: 8px; opacity: 0; transition: opacity 1.5s; border: 1px solid #ff00ea; }
-        #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 2000; font-size: 20px; text-align: center; cursor: pointer; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; }
+        #ui { position: fixed; top: 20px; width: 100%; text-align: center; color: #ff00ea; font-size: 26px; z-index: 100; font-weight: bold; text-shadow: 2px 2px 5px #000; pointer-events: none; }
+        .controls { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 15px; z-index: 500; }
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 3px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 40px; user-select: none; }
+        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; background: rgba(0,0,0,0.3); }
+        .msg { background: rgba(0,0,0,0.7); color: white; padding: 15px 25px; border-radius: 20px; font-size: 24px; margin: 10px; opacity: 0; transition: opacity 1.5s; border: 2px solid #ff00ea; }
+        #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 2000; font-size: 22px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="overlay" onclick="startApp()">❤️ Hazır! Başlamak için buraya dokun</div>
-<div id="ui-layer">Toplanan Güller: <span id="count">0</span> / 33</div>
+<div id="overlay" onclick="startApp()">🐾 Oyunu Başlatmak İçin Dokun 🐾</div>
+<div id="ui">Toplanan Güller: <span id="count">0</span> / 33</div>
 
-<div class="controls" id="joystick" style="display:none;">
-    <div class="btn up" id="b-up">▲</div>
-    <div class="btn left" id="b-left">◀</div>
-    <div class="btn down" id="b-down">▼</div>
-    <div class="btn right" id="b-right">▶</div>
+<div class="controls" id="btns" style="display:none;">
+    <div style="grid-column:2" class="btn" id="up">▲</div>
+    <div style="grid-column:1" class="btn" id="left">◀</div>
+    <div style="grid-column:2" class="btn" id="down">▼</div>
+    <div style="grid-column:3" class="btn" id="right">▶</div>
 </div>
 
 <div id="final-ui">
     <div id="m1" class="msg">i luv u 🖤</div>
     <div id="m2" class="msg">i luv u too 🧡</div>
-    <div id="m3" class="msg" style="color:#ff00ea; font-size: 26px; font-weight:bold;">elfexxel'den sevgilim chruno33'e 😛</div>
+    <div id="m3" class="msg" style="color:#ff00ea; font-size: 28px;">elfexxel'den sevgilim chruno33'e 😛</div>
 </div>
 
 <script>
-let scene, camera, renderer, chruno33, elfexxel, path, sea, sand, snow, bouquet;
-let roses = [];
-let collected = 0;
-let phase = "init"; 
-let move = { up: false, down: false, left: false, right: false };
+let scene, camera, renderer, chruno33, elfexxel, path, sea, sand, bouquet;
+let roses = [], collected = 0, phase = "init", move = {up:0, down:0, left:0, right:0};
 
 function startApp() {
     document.getElementById('overlay').style.display = 'none';
-    document.getElementById('joystick').style.display = 'grid';
-    if(phase === "init") setupScene();
+    document.getElementById('btns').style.display = 'grid';
+    if(phase === "init") initGame();
 }
 
-function setupScene() {
+function createDetailedCat(color) {
+    const cat = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({color: color});
+    
+    // Gövde
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.6, 4, 8), mat);
+    body.rotation.x = Math.PI/2;
+    cat.add(body);
+    
+    // Kafa
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.35), mat);
+    head.position.set(0, 0.4, 0.4);
+    cat.add(head);
+    
+    // Kulaklar
+    const earGeo = new THREE.ConeGeometry(0.1, 0.2, 4);
+    const e1 = new THREE.Mesh(earGeo, mat); e1.position.set(0.15, 0.7, 0.4); cat.add(e1);
+    const e2 = new THREE.Mesh(earGeo, mat); e2.position.set(-0.15, 0.7, 0.4); cat.add(e2);
+    
+    // Bacaklar
+    const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.4);
+    for(let i=0; i<4; i++) {
+        const leg = new THREE.Mesh(legGeo, mat);
+        leg.position.set(i<2?0.2:-0.2, -0.3, i%2==0?0.2:-0.2);
+        cat.add(leg);
+    }
+    
+    // Kuyruk
+    const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.5, 4, 8), mat);
+    tail.position.set(0, 0.1, -0.4);
+    tail.rotation.x = -Math.PI/4;
+    cat.add(tail);
+    
+    // Gözler
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+    const eyeR = eye.clone(); eye.position.set(0.12, 0.45, 0.7); eyeR.position.set(-0.12, 0.45, 0.7);
+    cat.add(eye, eyeR);
+
+    return cat;
+}
+
+function initGame() {
     phase = "play";
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020205);
-    scene.fog = new THREE.Fog(0x020205, 5, 45);
-
+    scene.background = new THREE.Color(0x050505);
     camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const sun = new THREE.DirectionalLight(0xffffff, 1);
+    sun.position.set(5, 10, 5); scene.add(sun);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 2));
-
-    path = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 200), new THREE.MeshStandardMaterial({color: 0xffffff}));
-    path.position.set(0, -0.2, -90);
+    // PATİKA
+    path = new THREE.Mesh(new THREE.BoxGeometry(8, 0.2, 200), new THREE.MeshStandardMaterial({color: 0xeeeeee}));
+    path.position.set(0, -0.5, -95);
     scene.add(path);
 
-    function createCat(color, name) {
-        const g = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.6, 4, 8), new THREE.MeshStandardMaterial({color: color}));
-        body.rotation.x = Math.PI/2; g.add(body);
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.4), new THREE.MeshStandardMaterial({color: color}));
-        head.position.set(0, 0.45, 0.4); g.add(head);
-        
-        // Dudak (Gizli)
-        const lip = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.1, 4, 8), new THREE.MeshBasicMaterial({color: 0xff1493}));
-        lip.position.set(0, 0.35, 0.8); lip.rotation.z = Math.PI/2;
-        lip.visible = false; g.add(lip); g.userData.lip = lip;
-
-        return g;
-    }
-
-    chruno33 = createCat(0xffa500, "chruno33");
-    elfexxel = createCat(0x111111, "elfexxel");
+    chruno33 = createDetailedCat(0xffa500);
+    elfexxel = createDetailedCat(0x111111);
     elfexxel.visible = false;
     scene.add(chruno33, elfexxel);
 
-    // BUKET (Çok daha şık ve renkli)
-    bouquet = new THREE.Group();
-    const bCols = [0xff0000, 0x800080, 0x111111];
-    for(let i=0; i<12; i++){
-        const f = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: bCols[i%3]}));
-        f.position.set(Math.random()*0.3-0.15, 0.4 + Math.random()*0.3, 0);
-        bouquet.add(f);
-    }
-    bouquet.visible = false;
-    scene.add(bouquet);
-
-    // GÜLLER (Kırmızı, Mor, Siyah)
+    // GÜLLER (Yolun ortasına dizili)
     const gCols = [0xff0000, 0x800080, 0x111111];
-    for(let i=0; i<35; i++) {
-        const r = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshStandardMaterial({color: gCols[i%3]}));
-        r.position.set((Math.random()-0.5)*8, 0.2, -i*5.5 - 20);
+    for(let i=0; i<40; i++) {
+        const r = new THREE.Group();
+        const flower = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshStandardMaterial({color: gCols[i%3]}));
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), new THREE.MeshStandardMaterial({color: 0x00ff00}));
+        flower.position.y = 0.3; r.add(flower, stem);
+        r.position.set((Math.random()-0.5)*5, -0.2, -i*4.5 - 15);
         scene.add(r); roses.push(r);
     }
 
-    const snowGeo = new THREE.BufferGeometry();
-    const snowP = new Float32Array(1500 * 3);
-    for(let i=0; i<4500; i++) snowP[i] = (Math.random()-0.5)*100;
-    snowGeo.setAttribute('position', new THREE.BufferAttribute(snowP, 3));
-    snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.12}));
-    scene.add(snow);
-
-    const btn = (id, k) => {
+    // BUTON KONTROLLERİ
+    const setupBtn = (id, key) => {
         const el = document.getElementById(id);
-        el.ontouchstart = (e) => { e.preventDefault(); move[k] = true; };
-        el.ontouchend = (e) => { e.preventDefault(); move[k] = false; };
+        el.ontouchstart = () => move[key] = 1; el.ontouchend = () => move[key] = 0;
     };
-    btn('b-up', 'up'); btn('b-down', 'down'); btn('b-left', 'left'); btn('b-right', 'right');
+    setupBtn('up', 'up'); setupBtn('down', 'down'); setupBtn('left', 'left'); setupBtn('right', 'right');
 
     animate();
 }
@@ -123,85 +131,74 @@ function setupScene() {
 function animate() {
     requestAnimationFrame(animate);
     if(phase === "play") {
-        const s = 0.17;
+        const s = 0.18;
         if(move.up) chruno33.position.z -= s;
         if(move.down) chruno33.position.z += s;
         if(move.left) chruno33.position.x -= s;
         if(move.right) chruno33.position.x += s;
 
-        chruno33.position.x = Math.max(-4.5, Math.min(4.5, chruno33.position.x));
-        chruno33.position.z = Math.max(-195, Math.min(5, chruno33.position.z));
-        chruno33.position.y = 0;
+        chruno33.position.x = Math.max(-3.5, Math.min(3.5, chruno33.position.x));
+        chruno33.position.z = Math.max(-190, Math.min(5, chruno33.position.z));
 
-        camera.position.lerp(new THREE.Vector3(chruno33.position.x, 3, chruno33.position.z + 7.5), 0.1);
+        camera.position.lerp(new THREE.Vector3(chruno33.position.x, 3, chruno33.position.z + 7), 0.1);
         camera.lookAt(chruno33.position);
 
         roses.forEach(r => {
-            if(r.visible && chruno33.position.distanceTo(r.position) < 0.9) {
+            if(r.visible && chruno33.position.distanceTo(r.position) < 0.8) {
                 r.visible = false; collected++;
                 document.getElementById('count').innerText = Math.min(33, collected);
             }
         });
 
-        if(collected >= 33 && chruno33.position.z < -188) {
-            phase = "final";
-            triggerFinal();
-        }
-    } else if(phase === "final") {
-        camera.position.lerp(new THREE.Vector3(0, 1.2, -294), 0.02);
-        camera.lookAt(0, 0.8, -300);
-        if(sea) sea.position.y = Math.sin(Date.now()*0.002)*0.15 - 0.1;
+        if(collected >= 33 && chruno33.position.z < -185) startFinal();
+    } else if (phase === "final") {
+        camera.position.lerp(new THREE.Vector3(0, 1.5, -294), 0.03);
+        camera.lookAt(0, 1, -300);
+        if(sea) sea.position.y = Math.sin(Date.now()*0.002)*0.1 - 0.2;
     }
-    if(snow) snow.position.y -= 0.05; if(snow && snow.position.y < -20) snow.position.y = 20;
     renderer.render(scene, camera);
 }
 
-function triggerFinal() {
-    document.getElementById('joystick').style.display = 'none';
-    path.visible = false;
-    roses.forEach(r => r.visible = false);
-    
+function startFinal() {
+    phase = "final";
+    document.getElementById('btns').style.display = 'none';
+    path.visible = false; roses.forEach(r => r.visible = false);
+
     sand = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({color: 0xd2b48c}));
-    sand.rotation.x = -Math.PI/2; sand.position.set(0, -0.1, -300);
+    sand.rotation.x = -Math.PI/2; sand.position.set(0, -0.5, -300);
     scene.add(sand);
 
-    // AÇIK RENK VE YAKIN DENİZ
-    sea = new THREE.Mesh(new THREE.PlaneGeometry(200, 100), new THREE.MeshStandardMaterial({color: 0x00ced1, transparent: true, opacity: 0.7}));
-    sea.rotation.x = -Math.PI/2; sea.position.set(0, -0.05, -340);
+    sea = new THREE.Mesh(new THREE.PlaneGeometry(200, 100), new THREE.MeshStandardMaterial({color: 0x00ced1, transparent: true, opacity: 0.8}));
+    sea.rotation.x = -Math.PI/2; sea.position.set(0, -0.3, -340);
     scene.add(sea);
 
-    chruno33.position.set(0, 0, -292);
-    elfexxel.position.set(0, 0, -308);
-    elfexxel.visible = true;
-    elfexxel.rotation.y = Math.PI;
+    chruno33.position.set(0, -0.1, -294);
+    elfexxel.position.set(0, -0.1, -306);
+    elfexxel.visible = true; elfexxel.rotation.y = Math.PI;
 
-    // SİNEMATİK AKIŞ
-    setTimeout(() => {
-        // 1. Birbirlerine yürürler
-        let walk = setInterval(() => {
-            chruno33.position.z -= 0.04;
-            elfexxel.position.z += 0.04;
-            if(chruno33.position.z <= -299.1) {
-                clearInterval(walk);
-                // 2. Ayağa kalk ve Sarıl
-                chruno33.rotation.x = -Math.PI/6;
-                elfexxel.rotation.x = -Math.PI/6;
-                chruno33.position.y = 0.3;
-                elfexxel.position.y = 0.3;
-                // 3. Buket Ver
-                bouquet.visible = true;
-                bouquet.position.set(0.4, 0.8, -300);
-                // 4. Dudak Uzat ve Öpüş
-                chruno33.userData.lip.visible = true;
-                elfexxel.userData.lip.visible = true;
-                
-                document.getElementById('final-ui').style.display = 'flex';
-                setTimeout(() => document.getElementById('m1').style.opacity = 1, 1000);
-                setTimeout(() => document.getElementById('m2').style.opacity = 1, 3000);
-                setTimeout(() => document.getElementById('m3').style.opacity = 1, 5500);
+    // YÜRÜME VE SARILMA
+    let walk = setInterval(() => {
+        chruno33.position.z -= 0.04; elfexxel.position.z += 0.04;
+        if(chruno33.position.z <= -299.2) {
+            clearInterval(walk);
+            // Şaha kalkma / Sarılma
+            chruno33.rotation.x = -Math.PI/5; elfexxel.rotation.x = -Math.PI/5;
+            chruno33.position.y = 0.4; elfexxel.position.y = 0.4;
+            
+            // Buket (Turuncu kedinin yanında belirsin)
+            bouquet = new THREE.Group();
+            for(let i=0; i<10; i++) {
+                const f = new THREE.Mesh(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({color: i%2?0xff0000:0x800080}));
+                f.position.set(Math.random()*0.3, Math.random()*0.3, 0); bouquet.add(f);
             }
-        }, 50);
-    }, 1000);
+            bouquet.position.set(0.4, 1, -300); scene.add(bouquet);
+
+            document.getElementById('final-ui').style.display = 'flex';
+            setTimeout(()=> document.getElementById('m1').style.opacity=1, 1000);
+            setTimeout(()=> document.getElementById('m2').style.opacity=1, 3000);
+            setTimeout(()=> document.getElementById('m3').style.opacity=1, 5000);
+        }
+    }, 50);
 }
 </script>
 </body>
