@@ -4,197 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chruno33 & Elfexxel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #020205; font-family: 'Arial', sans-serif; }
-        #info { position: fixed; top: 20px; width: 100%; text-align: center; color: #ff00ea; font-size: 24px; z-index: 100; font-weight: bold; text-shadow: 2px 2px 4px #000; }
-        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 200; flex-direction: column; background: rgba(0,0,0,0.4); pointer-events: none; }
-        .msg-box { background: rgba(20, 0, 40, 0.85); color: #c084fc; padding: 15px; border-radius: 15px; text-align: center; font-size: 20px; border: 2px solid #581c87; margin: 10px; opacity: 0; transition: opacity 1s; }
-        .label { position: absolute; color: white; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 8px; font-size: 14px; pointer-events: none; font-weight: bold; transform: translate(-50%, -150%); }
-        #loading { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        body { margin: 0; overflow: hidden; background: #020208; font-family: sans-serif; touch-action: none; }
+        #info { position: fixed; top: 20px; width: 100%; text-align: center; color: #ff00ea; font-size: 22px; z-index: 100; font-weight: bold; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 200; flex-direction: column; background: rgba(0,0,0,0.5); pointer-events: none; }
+        .msg-box { background: rgba(20, 0, 40, 0.9); color: #c084fc; padding: 15px; border-radius: 15px; text-align: center; font-size: 18px; border: 2px solid #581c87; margin: 10px; opacity: 0; transition: opacity 1s; }
+        .label { position: absolute; color: white; background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 8px; font-size: 12px; pointer-events: none; font-weight: bold; transform: translate(-50%, -150%); white-space: nowrap; }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); color: white; display: flex; justify-content: center; align-items: center; z-index: 1000; font-size: 20px; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-<div id="loading">Yükleniyor...</div>
+<div id="overlay">Yükleniyor...<br><br>Başlamak için dokun!</div>
 <div id="info">Güller: <span id="count">0</span> / 33</div>
 
 <div id="final-ui">
     <div id="b1" class="msg-box">i luv u 🖤</div>
     <div id="b2" class="msg-box">i luv u too 🧡</div>
-    <div id="b3" class="msg-box" style="font-size: 26px; color: #ff00ea; font-style: italic;">elfexxel'den sevgilim chruno33'e<br>😛</div>
+    <div id="b3" class="msg-box" style="font-size: 22px; color: #ff00ea;">elfexxel'den sevgilim chruno33'e<br>😛</div>
 </div>
 
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-        }
-    }
-</script>
-
-<script type="module">
-import * as THREE from 'three';
-
-const loadingScreen = document.getElementById('loading');
-
-// SAHNE AYARLARI
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x020208);
-scene.fog = new THREE.Fog(0x020208, 5, 45);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-document.body.appendChild(renderer.domElement);
-
-// IŞIKLANDIRMA
-const ambient = new THREE.AmbientLight(0xffffff, 1.2);
-scene.add(ambient);
-const pointLight = new THREE.PointLight(0xffffff, 2);
-pointLight.position.set(0, 5, 5);
-scene.add(pointLight);
-
-// KARLI PATİKA
-const pathGeo = new THREE.BoxGeometry(10, 0.2, 250);
-const pathMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-const path = new THREE.Mesh(pathGeo, pathMat);
-path.position.z = -110;
-scene.add(path);
-
-// DENİZ
-const seaGeo = new THREE.PlaneGeometry(200, 200);
-const seaMat = new THREE.MeshStandardMaterial({ color: 0x001133, transparent: true, opacity: 0.8 });
-const sea = new THREE.Mesh(seaGeo, seaMat);
-sea.rotation.x = -Math.PI / 2;
-sea.position.set(0, -0.5, -230);
-scene.add(sea);
-
-// KEDİ MODELLEYİCİ
-function createCat(color, eyeColor, name) {
-    const group = new THREE.Group();
-    // Gövde
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.6, 4, 8), new THREE.MeshStandardMaterial({color: color}));
-    body.rotation.x = Math.PI / 2;
-    group.add(body);
-    // Kafa
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.38), new THREE.MeshStandardMaterial({color: color}));
-    head.position.set(0, 0.45, 0.4);
-    group.add(head);
-    // Gözler
-    const eyeGeo = new THREE.SphereGeometry(0.07);
-    const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
-    const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.14, 0.55, 0.65);
-    const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.14, 0.55, 0.65);
-    group.add(e1, e2);
-    
-    // Etiket
-    const el = document.createElement('div');
-    el.className = 'label';
-    el.textContent = name;
-    document.body.appendChild(el);
-    group.userData.label = el;
-    return group;
-}
-
-const chruno33 = createCat(0xffa500, 0x8b4513, "chruno33");
-const elfexxel = createCat(0x111111, 0x00ff00, "elfexxel");
-elfexxel.position.set(0, 0, -125); // Siyah kedi ilerde bekliyor
-scene.add(chruno33, elfexxel);
-
-// GÜLLER (33 Adet)
-const roses = [];
-const rColors = [0x800080, 0xff0000, 0x000000];
-for(let i=0; i<33; i++) {
-    const r = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshStandardMaterial({color: rColors[i%3]}));
-    r.position.set((Math.random()-0.5)*8, 0.5 + Math.random()*2, -i*3.5 - 10);
-    scene.add(r);
-    roses.push(r);
-}
-
-// KAR YAĞIŞI
-const snowCount = 800;
-const snowGeo = new THREE.BufferGeometry();
-const snowPos = new Float32Array(snowCount * 3);
-for(let i=0; i<snowCount*3; i++) snowPos[i] = (Math.random()-0.5)*60;
-snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
-const snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.15}));
-scene.add(snow);
-
-// KONTROLLER
-let touch = { x: 0, y: 0, active: false };
-renderer.domElement.addEventListener('touchstart', (e) => { touch.active = true; loadingScreen.style.display='none'; });
-renderer.domElement.addEventListener('touchend', () => { touch.active = false; });
-renderer.domElement.addEventListener('touchmove', (e) => {
-    touch.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
-    touch.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
-});
-
+<script>
+// --- OYUN DEĞİŞKENLERİ ---
+let scene, camera, renderer, chruno33, elfexxel, path, snow, sea;
+let roses = [];
 let collected = 0;
 let phase = "play";
+let touch = { x: 0, y: 0, active: false };
+
+function init() {
+    // Sahne
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x020208);
+    scene.fog = new THREE.Fog(0x020208, 5, 50);
+
+    // Kamera
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    // Işıklar
+    const ambient = new THREE.AmbientLight(0xffffff, 1.5);
+    scene.add(ambient);
+    const sun = new THREE.DirectionalLight(0xffffff, 1);
+    sun.position.set(5, 10, 7);
+    scene.add(sun);
+
+    // Karlı Yol
+    const pathGeo = new THREE.BoxGeometry(12, 0.2, 300);
+    const pathMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    path = new THREE.Mesh(pathGeo, pathMat);
+    path.position.z = -140;
+    scene.add(path);
+
+    // Deniz
+    const seaGeo = new THREE.PlaneGeometry(300, 300);
+    const seaMat = new THREE.MeshStandardMaterial({ color: 0x001133, transparent: true, opacity: 0.8 });
+    sea = new THREE.Mesh(seaGeo, seaMat);
+    sea.rotation.x = -Math.PI / 2;
+    sea.position.set(0, -0.6, -280);
+    scene.add(sea);
+
+    // Kar Yağışı
+    const snowCount = 1000;
+    const snowGeo = new THREE.BufferGeometry();
+    const snowPos = new Float32Array(snowCount * 3);
+    for(let i=0; i<snowCount*3; i++) snowPos[i] = (Math.random()-0.5)*100;
+    snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+    snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.2}));
+    scene.add(snow);
+
+    // Kedi Fonksiyonu
+    function createCat(color, eyeColor, name) {
+        const group = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 0.7, 4, 8), new THREE.MeshStandardMaterial({color: color}));
+        body.rotation.x = Math.PI / 2;
+        group.add(body);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.45), new THREE.MeshStandardMaterial({color: color}));
+        head.position.set(0, 0.5, 0.5);
+        group.add(head);
+        const eyeGeo = new THREE.SphereGeometry(0.08);
+        const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
+        const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.15, 0.6, 0.85);
+        const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.15, 0.6, 0.85);
+        group.add(e1, e2);
+        
+        const el = document.createElement('div');
+        el.className = 'label';
+        el.textContent = name;
+        document.body.appendChild(el);
+        group.userData.label = el;
+        return group;
+    }
+
+    chruno33 = createCat(0xffa500, 0x8b4513, "chruno33");
+    elfexxel = createCat(0x111111, 0x00ff00, "elfexxel");
+    elfexxel.position.set(0, 0, -150);
+    scene.add(chruno33, elfexxel);
+
+    // Güller
+    const rColors = [0x800080, 0xff0000, 0x000000];
+    for(let i=0; i<33; i++) {
+        const rose = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshStandardMaterial({color: rColors[i%3]}));
+        rose.position.set((Math.random()-0.5)*10, 0.5 + Math.random()*3, -i*4 - 15);
+        scene.add(rose);
+        roses.push(rose);
+    }
+
+    // Event Listeners
+    window.addEventListener('touchstart', (e) => { 
+        touch.active = true; 
+        document.getElementById('overlay').style.display = 'none';
+    });
+    window.addEventListener('touchend', () => { touch.active = false; });
+    window.addEventListener('touchmove', (e) => {
+        touch.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+        touch.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+    });
+
+    animate();
+}
 
 function animate() {
     requestAnimationFrame(animate);
 
     if(phase === "play") {
-        chruno33.position.z -= 0.18; // İleri hareket
+        chruno33.position.z -= 0.2; // İleri hareket
         if(touch.active) {
             chruno33.position.x += touch.x * 0.15;
             chruno33.position.y += touch.y * 0.15;
             chruno33.position.y = Math.max(0, chruno33.position.y);
         }
 
-        camera.position.set(chruno33.position.x, chruno33.position.y + 2.5, chruno33.position.z + 7);
+        camera.position.set(chruno33.position.x, chruno33.position.y + 3, chruno33.position.z + 8);
         camera.lookAt(chruno33.position);
 
         roses.forEach(r => {
-            if(r.visible && chruno33.position.distanceTo(r.position) < 0.9) {
+            if(r.visible && chruno33.position.distanceTo(r.position) < 1) {
                 r.visible = false;
                 collected++;
                 document.getElementById('count').innerText = collected;
             }
         });
 
-        if(collected >= 33 && chruno33.position.z < -124) {
+        if(collected >= 33 && chruno33.position.z < -149) {
             phase = "final";
             startEnding();
         }
     }
 
-    // İsimleri kedilerin üstüne bağla
+    // İsimler
     [chruno33, elfexxel].forEach(cat => {
         const p = cat.position.clone().project(camera);
         cat.userData.label.style.left = (p.x + 1)/2 * window.innerWidth + 'px';
         cat.userData.label.style.top = (-p.y + 1)/2 * window.innerHeight + 'px';
     });
 
-    snow.position.y -= 0.05; if(snow.position.y < -20) snow.position.y = 20;
+    // Efektler
+    snow.position.y -= 0.1; if(snow.position.y < -20) snow.position.y = 30;
     sea.position.y = Math.sin(Date.now()*0.002)*0.2 - 0.5;
 
     renderer.render(scene, camera);
 }
 
 function startEnding() {
-    chruno33.position.set(0, 0, -124.2);
-    // Kediler sarılma pozisyonu
-    camera.position.set(0, 0.6, -121);
-    camera.lookAt(0, 0.5, -125);
-
+    chruno33.position.set(0, 0, -149.2);
+    camera.position.set(0, 0.8, -145);
+    camera.lookAt(0, 0.5, -150);
     document.getElementById('final-ui').style.display = 'flex';
     setTimeout(() => document.getElementById('b1').style.opacity = 1, 1000);
     setTimeout(() => document.getElementById('b2').style.opacity = 1, 3000);
     setTimeout(() => document.getElementById('b3').style.opacity = 1, 5000);
 }
 
-// Başlat
-loadingScreen.innerHTML = "Oynamak için ekrana dokun!";
-animate();
-
-window.addEventListener('resize', () => {
+// Başlatıcı
+window.onload = init;
+window.onresize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-});
+};
 </script>
 </body>
 </html>
