@@ -103,7 +103,7 @@ function init() {
 
     // GÜLLER
     const rCols = [0xff0000, 0x800080, 0x111111];
-    for(let i=0; i<33; i++) {
+    for(let i=0; i<35; i++) {
         const r = new THREE.Mesh(new THREE.SphereGeometry(0.28), new THREE.MeshStandardMaterial({color: rCols[i%3]}));
         r.position.set((Math.random()-0.5)*8, 0.25, -i*5.5 - 20);
         scene.add(r); roses.push(r);
