@@ -3,40 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chruno33 & Elfexxel - Kusursuz Versiyon</title>
+    <title>Chruno33 & Elfexxel - Real Love</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        /* Zoom ve ekran kaymasını tamamen kapatan çekirdek ayarlar */
+        /* ZOOM ENGELLEYİCİ KORUMA */
         * { 
             -webkit-user-select: none; 
             user-select: none; 
             touch-action: none; 
-            -webkit-tap-highlight-color: transparent; 
+            -webkit-tap-highlight-color: transparent;
         }
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; position: fixed; width: 100%; height: 100%; }
         
-        #ui { position: fixed; top: 15px; width: 100%; text-align: center; color: #ff00ea; font-size: 22px; font-weight: bold; z-index: 100; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+        #ui { position: fixed; top: 20px; width: 100%; text-align: center; color: #ff00ea; font-size: 24px; font-weight: bold; z-index: 100; text-shadow: 2px 2px 4px #000; pointer-events: none; }
         
-        .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 75px); grid-gap: 15px; z-index: 500; }
-        .btn { width: 75px; height: 75px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; font-size: 30px; }
+        .controls { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 20px; z-index: 500; }
+        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 32px; }
         
-        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; pointer-events: none; }
-        .msg { background: rgba(0,0,0,0.8); color: #fff; padding: 15px; border-radius: 12px; margin: 10px; opacity: 0; transition: 1.5s; border: 2px solid #ff00ea; text-align: center; }
+        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; background: rgba(0,0,0,0.4); }
+        .msg { background: rgba(0,0,0,0.8); color: white; padding: 15px 25px; border-radius: 20px; margin: 10px; border: 2px solid #ff00ea; opacity: 0; transition: 1.5s; font-size: 20px; text-align: center; }
         
-        #overlay { position: fixed; inset: 0; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; z-index: 2000; cursor: pointer; text-align: center; font-size: 20px; }
-        .label { position: absolute; color: white; background: rgba(0,0,0,0.6); padding: 3px 10px; border-radius: 6px; font-size: 14px; font-weight: bold; transform: translate(-50%, -250%); pointer-events: none; }
+        #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 2000; cursor: pointer; text-align: center; padding: 20px; line-height: 1.6; }
+        .label { position: absolute; color: white; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 8px; font-size: 14px; font-weight: bold; transform: translate(-50%, -280%); pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="overlay" onclick="startApp()">❤️ TÜM HATALAR GİDERİLDİ ❤️<br><br>(Dokun ve Başla)</div>
-<div id="ui">Toplanan Güller: <span id="count">0</span> / 33</div>
+<div id="overlay" onclick="start()">❤️ KORUYUCU MOD AKTİF ❤️<br><br>Dokun ve Başla<br>(Zoom ve Hatalar Düzeltildi)</div>
+<div id="ui">Güller: <span id="count">0</span> / 33</div>
 
 <div class="controls" id="joy" style="display:none;">
-    <div style="grid-column: 2" class="btn" id="up">▲</div>
-    <div style="grid-column: 1" class="btn" id="left">◀</div>
-    <div style="grid-column: 2" class="btn" id="down">▼</div>
-    <div style="grid-column: 3" class="btn" id="right">▶</div>
+    <div style="grid-column: 2" class="btn" id="b-up">▲</div>
+    <div style="grid-column: 1" class="btn" id="b-left">◀</div>
+    <div style="grid-column: 2" class="btn" id="b-down">▼</div>
+    <div style="grid-column: 3" class="btn" id="b-right">▶</div>
 </div>
 
 <div id="final-ui">
@@ -46,139 +46,146 @@
 </div>
 
 <script>
+// ZOOM ENGELLEYİCİ KRİTİK KORUMA SİSTEMİ
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+}, { passive: false });
+
 let scene, camera, renderer, chruno33, elfexxel, path, bouquet;
 let roses = [], collected = 0, phase = "init";
 let keys = { up: false, down: false, left: false, right: false };
 
-function startApp() {
+function start() {
     document.getElementById('overlay').style.display = 'none';
     document.getElementById('joy').style.display = 'grid';
-    if(phase === "init") setup();
+    if(phase === "init") initGame();
 }
 
-function createPerfectCat(color, eyeColor, name) {
+function createRealCat(color, eyeColor, name) {
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: color });
 
-    // Gövde (Silindir hatasını önlemek için iki küre birleşimi)
-    const bodyLower = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), mat);
-    bodyLower.position.y = 0.2;
-    group.add(bodyLower);
+    // Gövde (Tombul ve kedi gibi)
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 20), mat);
+    body.scale.set(1, 0.85, 1.2);
+    body.position.y = 0.3;
+    group.add(body);
 
-    const bodyUpper = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), mat);
-    bodyUpper.position.y = 0.4;
-    group.add(bodyUpper);
-
-    // Kafa (Küre)
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), mat);
-    head.position.set(0, 0.65, 0.05);
+    // Kafa
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 20), mat);
+    head.position.set(0, 0.6, 0.25);
     group.add(head);
 
-    // Kulaklar
-    const earGeo = new THREE.ConeGeometry(0.08, 0.18, 4);
-    const eL = new THREE.Mesh(earGeo, mat); eL.position.set(0.12, 0.85, 0.05); group.add(eL);
-    const eR = eL.clone(); eR.position.x = -0.12; group.add(eR);
+    // Gerçek Kedi Kulakları (Sivri)
+    const earGeo = new THREE.ConeGeometry(0.12, 0.25, 4);
+    const eL = new THREE.Mesh(earGeo, mat); eL.position.set(0.18, 0.85, 0.25); group.add(eL);
+    const eR = eL.clone(); eR.position.x = -0.18; group.add(eR);
 
-    // Gözler
-    const eyeGeo = new THREE.SphereGeometry(0.04, 8, 8);
+    // İri ve Canlı Gözler
     const eyeMat = new THREE.MeshBasicMaterial({ color: eyeColor });
-    const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(0.1, 0.7, 0.28); group.add(eyeL);
-    const eyeR = eyeL.clone(); eyeR.position.x = -0.1; group.add(eyeR);
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), eyeMat);
+    eyeL.position.set(0.14, 0.65, 0.52); group.add(eyeL);
+    const eyeR = eyeL.clone(); eyeR.position.x = -0.14; group.add(eyeR);
 
     // Bacaklar
-    const legGeo = new THREE.SphereGeometry(0.08, 8, 8);
+    const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.2);
     for(let i=0; i<4; i++) {
         const leg = new THREE.Mesh(legGeo, mat);
-        leg.position.set(i % 2 ? 0.15 : -0.15, 0.08, i < 2 ? 0.15 : -0.15);
+        leg.position.set(i % 2 ? 0.18 : -0.18, 0.1, i < 2 ? 0.3 : -0.2);
         group.add(leg);
     }
 
     if(name) {
-        const el = document.createElement('div'); el.className = 'label'; el.textContent = name;
-        document.body.appendChild(el); group.userData.label = el;
+        const div = document.createElement('div'); div.className = 'label'; div.textContent = name;
+        document.body.appendChild(div); group.userData.label = div;
     }
     return group;
 }
 
-function setup() {
+function initGame() {
     phase = "play";
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020205);
-    scene.fog = new THREE.Fog(0x020205, 5, 45);
+    scene.background = new THREE.Color(0x050510);
+    scene.fog = new THREE.Fog(0x050510, 5, 40);
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
     scene.add(new THREE.AmbientLight(0xffffff, 2));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(5, 10, 5); scene.add(sun);
+    const sun = new THREE.DirectionalLight(0xffffff, 1); sun.position.set(5, 10, 5); scene.add(sun);
 
-    // PATİKA (X genişliği 6 birim)
-    path = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 200), new THREE.MeshStandardMaterial({color: 0xffffff}));
+    // BEYAZ YOL
+    path = new THREE.Mesh(new THREE.BoxGeometry(7, 0.1, 200), new THREE.MeshStandardMaterial({color: 0xffffff}));
     path.position.set(0, -0.05, -90); scene.add(path);
 
-    chruno33 = createPerfectCat(0xffa500, 0x331100, "chruno33");
-    elfexxel = createPerfectCat(0x111111, 0x00ff00, "elfexxel"); // Elfexxel yeşil gözlü
+    chruno33 = createRealCat(0xffa500, 0x331100, "chruno33");
+    elfexxel = createRealCat(0x111111, 0x00ff00, "elfexxel"); // Yeşil gözlü Elfexxel
     elfexxel.visible = false;
     scene.add(chruno33, elfexxel);
 
-    // GÜLLER (Sadece patika içinde: x: -2.5 to 2.5)
-    const cols = [0xff0000, 0x800080, 0x111111];
+    // GÜLLER (Yol içinde güvenli bölge)
+    const roseColors = [0xff0000, 0x800080, 0x111111];
     for(let i=0; i<35; i++) {
-        const r = new THREE.Mesh(new THREE.SphereGeometry(0.18), new THREE.MeshStandardMaterial({color: cols[i%3]}));
-        r.position.set((Math.random()-0.5)*5, 0.2, -i*5.5 - 20);
+        const r = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshStandardMaterial({color: roseColors[i%3]}));
+        r.position.set((Math.random()-0.5)*5.5, 0.2, -i*5.5 - 20);
         scene.add(r); roses.push(r);
     }
 
-    // BUKET
+    // Buket
     bouquet = new THREE.Group();
-    const c = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.35), new THREE.MeshStandardMaterial({color: 0x4d2600}));
-    c.rotation.x = Math.PI; bouquet.add(c);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4), new THREE.MeshStandardMaterial({color: 0x4d2600}));
+    cone.rotation.x = Math.PI; bouquet.add(cone);
     for(let i=0; i<5; i++) {
-        const f = new THREE.Mesh(new THREE.SphereGeometry(0.07), new THREE.MeshBasicMaterial({color: 0xff0000}));
-        f.position.set(Math.random()*0.1-0.05, 0.18, Math.random()*0.1-0.05);
+        const f = new THREE.Mesh(new THREE.SphereGeometry(0.08), new THREE.MeshBasicMaterial({color: 0xff0000}));
+        f.position.set(Math.random()*0.12-0.06, 0.2, Math.random()*0.12-0.06);
         bouquet.add(f);
     }
     bouquet.visible = false; scene.add(bouquet);
 
-    // Zoom engelleyici buton kontrolleri
-    const b = (id, k) => {
+    // Koruyucu Buton Dinleyicileri
+    const setupBtn = (id, k) => {
         const el = document.getElementById(id);
         el.addEventListener('pointerdown', (e) => { e.preventDefault(); keys[k] = true; });
         el.addEventListener('pointerup', (e) => { e.preventDefault(); keys[k] = false; });
         el.addEventListener('pointerleave', (e) => { e.preventDefault(); keys[k] = false; });
     };
-    b('up','up'); b('down','down'); b('left','left'); b('right','right');
+    setupBtn('b-up', 'up'); setupBtn('b-down', 'down'); setupBtn('b-left', 'left'); setupBtn('b-right', 'right');
 
-    animate();
+    loop();
 }
 
-function animate() {
-    requestAnimationFrame(animate);
+function loop() {
+    requestAnimationFrame(loop);
     if(phase === "play") {
-        const s = 0.25;
-        if(keys.up) chruno33.position.z -= s;
-        if(keys.down) chruno33.position.z += s;
-        if(keys.left) chruno33.position.x -= s;
-        if(keys.right) chruno33.position.x += s;
+        const speed = 0.25;
+        if(keys.up) chruno33.position.z -= speed;
+        if(keys.down) chruno33.position.z += speed;
+        if(keys.left) chruno33.position.x -= speed;
+        if(keys.right) chruno33.position.x += speed;
 
-        chruno33.position.x = Math.max(-2.8, Math.min(2.8, chruno33.position.x));
+        chruno33.position.x = Math.max(-3.1, Math.min(3.1, chruno33.position.x));
         chruno33.position.z = Math.max(-195, Math.min(5, chruno33.position.z));
 
-        camera.position.lerp(new THREE.Vector3(chruno33.position.x, 2.8, chruno33.position.z + 6), 0.1);
+        camera.position.lerp(new THREE.Vector3(chruno33.position.x, 2.5, chruno33.position.z + 6), 0.1);
         camera.lookAt(chruno33.position);
 
         roses.forEach(r => {
-            if(r.visible && chruno33.position.distanceTo(r.position) < 0.75) {
+            if(r.visible && chruno33.position.distanceTo(r.position) < 0.8) {
                 r.visible = false; collected++;
                 document.getElementById('count').innerText = Math.min(33, collected);
             }
         });
 
-        if(collected >= 33 && chruno33.position.z < -190) { phase = "final"; triggerFinal(); }
+        if(collected >= 33 && chruno33.position.z < -190) { phase = "final"; end(); }
     } else if(phase === "final") {
-        camera.position.lerp(new THREE.Vector3(4, 1.8, -300), 0.03);
+        camera.position.lerp(new THREE.Vector3(5, 1.8, -300), 0.03);
         camera.lookAt(0, 1, -300);
     }
 
@@ -192,31 +199,29 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-function triggerFinal() {
+function end() {
     document.getElementById('joy').style.display = 'none';
     path.visible = false;
     
     const sand = new THREE.Mesh(new THREE.PlaneGeometry(100, 40), new THREE.MeshStandardMaterial({color: 0xc2b280}));
     sand.rotation.x = -Math.PI/2; sand.position.set(0, -0.05, -300); scene.add(sand);
 
-    const sea = new THREE.Mesh(new THREE.PlaneGeometry(120, 100), new THREE.MeshStandardMaterial({color: 0x0055ff, transparent: true, opacity: 0.6}));
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(120, 100), new THREE.MeshStandardMaterial({color: 0x0066ff, transparent: true, opacity: 0.6}));
     sea.rotation.x = -Math.PI/2; sea.position.set(0, -0.1, -360); scene.add(sea);
 
-    chruno33.position.set(0, 0, -295); chruno33.rotation.y = Math.PI;
-    elfexxel.position.set(0, 0, -305); elfexxel.visible = true; elfexxel.rotation.y = 0;
+    chruno33.position.set(0, 0, -294); chruno33.rotation.y = Math.PI;
+    elfexxel.position.set(0, 0, -306); elfexxel.visible = true; elfexxel.rotation.y = 0;
 
-    let move = setInterval(() => {
+    let walk = setInterval(() => {
         chruno33.position.z -= 0.05;
         elfexxel.position.z += 0.05;
-        
-        if(chruno33.position.distanceTo(elfexxel.position) < 1.0) {
-            clearInterval(move);
-            // KUSURSUZ SARILMA (Ayağa kalkma)
-            chruno33.rotation.x = -Math.PI/4; chruno33.position.y = 0.35;
-            elfexxel.rotation.x = -Math.PI/4; elfexxel.position.y = 0.35;
-            
-            bouquet.visible = true; bouquet.position.set(0.4, 0.9, -300);
-            
+        if(chruno33.position.distanceTo(elfexxel.position) < 1.2) {
+            clearInterval(walk);
+            // KUSURSUZ SARILMA
+            chruno33.rotation.x = -Math.PI/4; chruno33.position.y = 0.4;
+            elfexxel.rotation.x = -Math.PI/4; elfexxel.position.y = 0.4;
+            bouquet.visible = true; bouquet.position.set(0.4, 1.0, -300);
+
             document.getElementById('final-ui').style.display = 'flex';
             setTimeout(() => document.getElementById('m1').style.opacity = 1, 500);
             setTimeout(() => document.getElementById('m2').style.opacity = 1, 2000);
