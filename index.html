@@ -10,6 +10,7 @@ margin:0;
 overflow:hidden;
 background:#000;
 font-family:cursive;
+touch-action:none;
 }
 
 canvas{
@@ -47,14 +48,14 @@ let cat = {
 x:200,
 y:canvas.height/2,
 size:35,
-speed:5
+speed:6
 };
 
-// ROSES (33 adet garanti)
+// ROSES
 let roses = [];
 for(let i=0;i<33;i++){
 roses.push({
-x:400 + i*250,
+x:500 + i*220,
 y:canvas.height/2 + (Math.random()*120-60),
 taken:false
 });
@@ -72,32 +73,45 @@ speed:1+Math.random()*2
 
 // TOUCH CONTROL
 canvas.addEventListener("touchmove", e=>{
+e.preventDefault();
+
 let touchX = e.touches[0].clientX;
+
 if(touchX > canvas.width/2){
 worldOffset += cat.speed;
 }else{
 worldOffset -= cat.speed;
 }
+
+if(worldOffset < 0) worldOffset = 0;
+
 });
 
-// KEYBOARD (test için)
+// KEYBOARD TEST
 window.addEventListener("keydown", e=>{
 if(e.key==="ArrowRight") worldOffset += cat.speed;
 if(e.key==="ArrowLeft") worldOffset -= cat.speed;
 });
 
-// DRAW PATH
+// PATH
 function drawPath(){
 ctx.fillStyle="#222";
-ctx.fillRect(0,canvas.height/2-90,canvas.width,180);
+
+let pathY = canvas.height/2-90;
+
+// world ile kaydır
+ctx.fillRect(-worldOffset,pathY,8000,180);
 }
 
-// DRAW SNOW
+// SNOW
 function drawSnow(){
 ctx.fillStyle="white";
+
 snow.forEach(s=>{
 ctx.fillRect(s.x,s.y,2,2);
+
 s.y += s.speed;
+
 if(s.y>canvas.height){
 s.y=0;
 s.x=Math.random()*canvas.width;
@@ -105,7 +119,7 @@ s.x=Math.random()*canvas.width;
 });
 }
 
-// DRAW CAT
+// CAT
 function drawCat(){
 ctx.fillStyle="orange";
 ctx.beginPath();
@@ -119,25 +133,31 @@ ctx.arc(cat.x+10,cat.y-5,5,0,Math.PI*2);
 ctx.fill();
 
 ctx.fillStyle="white";
+ctx.font="20px cursive";
 ctx.fillText("chruno33",cat.x-35,cat.y-45);
 }
 
-// DRAW ROSES
+// ROSES
 function drawRoses(){
+
 roses.forEach(r=>{
+
 if(!r.taken){
+
 let screenX = r.x - worldOffset;
 
 ctx.fillStyle="purple";
 ctx.beginPath();
-ctx.arc(screenX,r.y,15,0,Math.PI*2);
+ctx.arc(screenX,r.y,14,0,Math.PI*2);
 ctx.fill();
 
-// COLLISION
+// collision
 let dist = Math.hypot(cat.x-screenX,cat.y-r.y);
+
 if(dist < 40){
 r.taken = true;
 collected++;
+
 document.getElementById("counter").innerText =
 "🌹 "+collected+" / 33";
 
@@ -195,7 +215,7 @@ canvas.width/2-200,
 );
 }
 
-// UPDATE LOOP
+// LOOP
 function update(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
