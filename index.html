@@ -1,25 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chruno33 & Elfexxel - Fixed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Chruno33 & Elfexxel - Final</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        * { -webkit-user-select: none; user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; overflow: hidden; background: #000; position: fixed; width: 100%; height: 100%; }
-        #ui { position: fixed; top: 20px; width: 100%; text-align: center; color: #ff00ea; font-size: 24px; font-weight: bold; z-index: 100; pointer-events: none; }
-        .controls { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 20px; z-index: 500; }
-        .btn { width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 32px; }
-        #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 9999; cursor: pointer; text-align: center; font-size: 22px; }
-        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; background: rgba(0,0,0,0.5); }
-        .msg { background: rgba(0,0,0,0.9); color: white; padding: 15px 25px; border-radius: 20px; margin: 10px; border: 2px solid #ff00ea; opacity: 0; transition: 1.5s; }
+        /* EKRANIN OYNAMASINI TAMAMEN ENGELLER */
+        html, body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            width: 100%; height: 100%; position: fixed;
+            background: #000; touch-action: none; -webkit-overflow-scrolling: none;
+        }
+        #ui { position: fixed; top: 15px; width: 100%; text-align: center; color: #ff00ea; font-size: 20px; font-weight: bold; z-index: 100; pointer-events: none; }
+        .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 70px); grid-gap: 15px; z-index: 500; }
+        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; }
+        #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 9999; text-align: center; }
+        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; background: rgba(0,0,0,0.7); }
+        .msg { background: rgba(255,0,234,0.2); color: white; padding: 12px 20px; border-radius: 15px; margin: 8px; border: 1px solid #ff00ea; opacity: 0; transition: 1s; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div id="overlay">❤️ DOKUN VE BAŞLA ❤️<br><br>(Hatalar Giderildi)</div>
-<div id="ui">Toplanan Güller: <span id="count">0</span> / 33</div>
+<div id="overlay" onclick="start()">❤️ BAŞLAMAK İÇİN DOKUN ❤️<br><br>(Zoom ve Hatalar Kilitlendi)</div>
+<div id="ui">🌹 Güller: <span id="count">0</span> / 33</div>
 
 <div class="controls" id="joy" style="display:none;">
     <div style="grid-column: 2" class="btn" id="b-up">▲</div>
@@ -31,39 +35,42 @@
 <div id="final-ui">
     <div id="m1" class="msg">i luv u 🖤</div>
     <div id="m2" class="msg">i luv u too 🧡</div>
-    <div id="m3" class="msg" style="color:#ff00ea;">elfexxel'den sevgilim chruno33'e 😛</div>
+    <div id="m3" class="msg" style="font-weight:bold;">elfexxel'den sevgilim chruno33'e 😛</div>
 </div>
 
 <script>
-document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+// MOBİL ZOOM VE KAYDIRMA KOMPLE İPTAL
+document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
 
 let scene, camera, renderer, chruno33, elfexxel, roses = [], collected = 0, phase = "init";
 let keys = { up: false, down: false, left: false, right: false };
 
-document.getElementById('overlay').addEventListener('pointerdown', function() {
-    this.style.display = 'none';
+function start() {
+    document.getElementById('overlay').style.display = 'none';
     document.getElementById('joy').style.display = 'grid';
     if(phase === "init") init();
-});
+}
 
 function createCat(color, eyeColor) {
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: color });
-    // Gövde
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), mat);
-    body.scale.set(1, 0.8, 1.2); body.position.y = 0.3; group.add(body);
-    // Kafa
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), mat);
-    head.position.set(0, 0.6, 0.2); group.add(head);
-    // Kulaklar
-    const earGeo = new THREE.ConeGeometry(0.1, 0.2, 4);
-    const eL = new THREE.Mesh(earGeo, mat); eL.position.set(0.15, 0.8, 0.2); group.add(eL);
-    const eR = eL.clone(); eR.position.x = -0.15; group.add(eR);
-    // Gözler
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 20, 20), mat);
+    body.scale.set(1, 0.8, 1.3); body.position.y = 0.3; group.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 20, 20), mat);
+    head.position.set(0, 0.55, 0.2); group.add(head);
+    const earGeo = new THREE.ConeGeometry(0.08, 0.18, 4);
+    const eL = new THREE.Mesh(earGeo, mat); eL.position.set(0.12, 0.75, 0.2); group.add(eL);
+    const eR = eL.clone(); eR.position.x = -0.12; group.add(eR);
     const eyeMat = new THREE.MeshBasicMaterial({ color: eyeColor });
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), eyeMat);
-    eye.position.set(0.12, 0.65, 0.45); group.add(eye);
-    const eye2 = eye.clone(); eye2.position.x = -0.12; group.add(eye2);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), eyeMat);
+    eye.position.set(0.1, 0.6, 0.4); group.add(eye);
+    const eye2 = eye.clone(); eye2.position.x = -0.1; group.add(eye2);
+    const legGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.15);
+    for(let i=0; i<4; i++){
+        const leg = new THREE.Mesh(legGeo, mat);
+        leg.position.set(i%2?0.15:-0.15, 0.08, i<2?0.3:-0.2); group.add(leg);
+    }
     return group;
 }
 
@@ -71,49 +78,52 @@ function init() {
     phase = "play";
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050510);
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-    const path = new THREE.Mesh(new THREE.BoxGeometry(7, 0.1, 200), new THREE.MeshStandardMaterial({color: 0xeeeeee}));
-    path.position.set(0, -0.05, -90); scene.add(path);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+    const road = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, 200), new THREE.MeshStandardMaterial({color: 0xffffff}));
+    road.position.set(0, -0.05, -95); scene.add(road);
 
     chruno33 = createCat(0xffa500, 0x221100);
     elfexxel = createCat(0x111111, 0x00ff00);
     elfexxel.visible = false; scene.add(chruno33, elfexxel);
 
     const colors = [0xff0000, 0x800080, 0x111111];
-    for(let i=0; i<35; i++) {
-        const r = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshStandardMaterial({color: colors[i%3]}));
+    for(let i=0; i<33; i++) {
+        const r = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshStandardMaterial({color: colors[i%3]}));
         r.position.set((Math.random()-0.5)*5, 0.2, -i*5.5 - 20);
         scene.add(r); roses.push(r);
     }
 
-    const setupBtn = (id, k) => {
+    const setBtn = (id, k) => {
         const el = document.getElementById(id);
         el.addEventListener('pointerdown', (e) => { e.preventDefault(); keys[k] = true; });
         el.addEventListener('pointerup', () => keys[k] = false);
+        el.addEventListener('pointerleave', () => keys[k] = false);
     };
-    setupBtn('b-up','up'); setupBtn('b-down','down'); setupBtn('b-left','left'); setupBtn('b-right','right');
+    setBtn('b-up','up'); setBtn('b-down','down'); setBtn('b-left','left'); setBtn('b-right','right');
     loop();
 }
 
 function loop() {
     requestAnimationFrame(loop);
     if(phase === "play") {
-        if(keys.up) chruno33.position.z -= 0.3;
-        if(keys.down) chruno33.position.z += 0.3;
-        if(keys.left) chruno33.position.x -= 0.3;
-        if(keys.right) chruno33.position.x += 0.3;
-        chruno33.position.x = Math.max(-3, Math.min(3, chruno33.position.x));
-        camera.position.lerp(new THREE.Vector3(chruno33.position.x, 3, chruno33.position.z + 7), 0.1);
-        camera.lookAt(chruno33.position);
+        const spd = 0.25;
+        if(keys.up) chruno33.position.z -= spd;
+        if(keys.down) chruno33.position.z += spd;
+        if(keys.left) chruno33.position.x -= spd;
+        if(keys.right) chruno33.position.x += spd;
+        chruno33.position.x = Math.max(-2.7, Math.min(2.7, chruno33.position.x));
+        camera.position.lerp(new THREE.Vector3(chruno33.position.x, 2.5, chruno33.position.z + 6), 0.1);
+        camera.lookAt(chruno33.position.x, 0.5, chruno33.position.z);
         roses.forEach(r => {
-            if(r.visible && chruno33.position.distanceTo(r.position) < 0.8) {
+            if(r.visible && chruno33.position.distanceTo(r.position) < 0.7) {
                 r.visible = false; collected++;
-                document.getElementById('count').innerText = Math.min(33, collected);
+                document.getElementById('count').innerText = collected;
             }
         });
         if(collected >= 33 && chruno33.position.z < -190) { phase = "final"; end(); }
@@ -123,14 +133,20 @@ function loop() {
 
 function end() {
     document.getElementById('joy').style.display = 'none';
-    chruno33.position.set(-1, 0, -210);
-    elfexxel.position.set(1, 0, -210);
+    chruno33.position.set(-0.8, 0, -210);
+    elfexxel.position.set(0.8, 0, -210);
     elfexxel.visible = true;
     document.getElementById('final-ui').style.display = 'flex';
     setTimeout(() => document.getElementById('m1').style.opacity = 1, 500);
-    setTimeout(() => document.getElementById('m2').style.opacity = 1, 2000);
-    setTimeout(() => document.getElementById('m3').style.opacity = 1, 3500);
+    setTimeout(() => document.getElementById('m2').style.opacity = 1, 1500);
+    setTimeout(() => document.getElementById('m3').style.opacity = 1, 3000);
 }
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 </script>
 </body>
 </html>
