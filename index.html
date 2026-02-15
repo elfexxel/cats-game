@@ -1,191 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chruno33 & Elfexxel</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; }
-        #info { position: fixed; top: 10px; width: 100%; text-align: center; color: #ff00ea; font-size: 22px; z-index: 100; font-weight: bold; text-shadow: 2px 2px 4px #000; }
-        
-        /* KONTROL TUŞLARI */
-        .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 70px); grid-gap: 10px; z-index: 500; }
-        .btn { width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 30px; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .btn:active { background: rgba(255,255,255,0.5); }
-        .up { grid-column: 2; }
-        .left { grid-column: 1; }
-        .down { grid-column: 2; }
-        .right { grid-column: 3; }
-
-        #final-ui { position: fixed; inset: 0; display: none; justify-content: center; align-items: center; z-index: 200; flex-direction: column; background: rgba(0,0,0,0.6); }
-        .msg-box { background: rgba(20, 0, 40, 0.9); color: #e0aaff; padding: 15px; border-radius: 15px; text-align: center; font-size: 18px; border: 2px solid #7b2cbf; margin: 10px; opacity: 0; transition: opacity 1s; }
-        .label { position: absolute; color: white; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; pointer-events: none; transform: translate(-50%, -160%); }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Dancing Script', cursive; }
+        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #counter { position: absolute; top: 20px; left: 20px; color: white; font-size: 28px; text-shadow: 2px 2px #ff00ea; pointer-events: auto; }
+        #love-message { 
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            color: #8a2be2; font-size: 35px; text-align: center; display: none;
+            background: rgba(0,0,0,0.8); padding: 30px; border-radius: 20px; border: 2px solid #000;
+            text-shadow: 0 0 10px #000; width: 80%;
+        }
+        .speech-bubble {
+            position: absolute; background: white; border-radius: 15px; padding: 10px;
+            font-family: Arial, sans-serif; font-weight: bold; display: none;
+        }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div id="info">Güller: <span id="count">0</span> / 33</div>
-
-<div class="controls">
-    <div class="btn up" id="btn-up">↑</div>
-    <div class="btn left" id="btn-left">←</div>
-    <div class="btn down" id="btn-down">↓</div>
-    <div class="btn right" id="btn-right">→</div>
+<div id="ui-layer">
+    <div id="counter">Toplanan Güller: 0 / 33</div>
+    <div id="love-message"></div>
+    <div id="bubble-black" class="speech-bubble">i luv u</div>
+    <div id="bubble-orange" class="speech-bubble">i luv u too</div>
 </div>
 
-<div id="final-ui">
-    <div id="b1" class="msg-box">i luv u 🖤</div>
-    <div id="b2" class="msg-box">i luv u too 🧡</div>
-    <div id="b3" class="msg-box" style="font-size: 22px; color: #ff00ea;">elfexxel'den sevgilim chruno33'e<br>😛</div>
-</div>
+<script type="module">
+import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 
-<script>
-let scene, camera, renderer, chruno33, elfexxel, sea, snow;
-let roses = [];
-let collected = 0;
-let phase = "play";
-let move = { forward: false, backward: false, left: false, right: false };
+// --- KURULUM ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020205);
+scene.fog = new THREE.FogExp2(0x020205, 0.04);
 
-function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020208);
-    scene.fog = new THREE.Fog(0x020208, 10, 50);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+// --- IŞIKLAR ---
+const light = new THREE.PointLight(0xffffff, 1, 100);
+light.position.set(0, 10, 10);
+scene.add(light, new THREE.AmbientLight(0x404040, 1.5));
 
-    scene.add(new THREE.AmbientLight(0xffffff, 2));
+// --- KARLI YOL VE ORMAN ---
+const pathWidth = 10;
+const pathLength = 200;
+const floorGeo = new THREE.PlaneGeometry(pathWidth, pathLength);
+const floorMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0 }); // Karlı yol
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
 
-    // KARLI PATİKA
-    const pathGeo = new THREE.BoxGeometry(10, 0.2, 200);
-    const pathMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const path = new THREE.Mesh(pathGeo, pathMat);
-    path.position.z = -100;
-    scene.add(path);
-
-    // DENİZ (Patikanın ucunda)
-    const seaGeo = new THREE.PlaneGeometry(500, 500);
-    const seaMat = new THREE.MeshStandardMaterial({ color: 0x002244, transparent: true, opacity: 0.8 });
-    sea = new THREE.Mesh(seaGeo, seaMat);
-    sea.rotation.x = -Math.PI / 2;
-    sea.position.set(0, -0.5, -350);
-    scene.add(sea);
-
-    // KEDİLER
-    function createCat(color, eyeColor, name) {
-        const group = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.6, 4, 8), new THREE.MeshStandardMaterial({color: color}));
-        body.rotation.x = Math.PI / 2;
-        group.add(body);
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.4), new THREE.MeshStandardMaterial({color: color}));
-        head.position.set(0, 0.45, 0.4);
-        group.add(head);
-        const eyeGeo = new THREE.SphereGeometry(0.07);
-        const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
-        const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.12, 0.5, 0.7);
-        const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.12, 0.5, 0.7);
-        group.add(e1, e2);
-        
-        const label = document.createElement('div');
-        label.className = 'label';
-        label.textContent = name;
-        document.body.appendChild(label);
-        group.userData.label = label;
-        return group;
-    }
-
-    chruno33 = createCat(0xffa500, 0x8b4513, "chruno33");
-    elfexxel = createCat(0x0a0a0a, 0x00ff00, "elfexxel");
-    elfexxel.position.set(0, 0, -202); 
-    scene.add(chruno33, elfexxel);
-
-    // GÜLLER (Yerde ve patika sınırında)
-    const rColors = [0x800080, 0xff0000, 0x000000];
-    for(let i=0; i<33; i++) {
-        const rose = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshStandardMaterial({color: rColors[i%3]}));
-        rose.position.set((Math.random()-0.5)*8, 0.3, -i*5.5 - 15);
-        scene.add(rose);
-        roses.push(rose);
-    }
-
-    // Kar
-    const snowGeo = new THREE.BufferGeometry();
-    const snowPos = new Float32Array(1000 * 3);
-    for(let i=0; i<3000; i++) snowPos[i] = (Math.random()-0.5)*100;
-    snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
-    snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.1}));
-    scene.add(snow);
-
-    // BUTON OLAYLARI
-    const setupBtn = (id, key) => {
-        const el = document.getElementById(id);
-        el.addEventListener('touchstart', (e) => { e.preventDefault(); move[key] = true; });
-        el.addEventListener('touchend', (e) => { e.preventDefault(); move[key] = false; });
-    };
-    setupBtn('btn-up', 'forward'); setupBtn('btn-down', 'backward');
-    setupBtn('btn-left', 'left'); setupBtn('btn-right', 'right');
-
-    animate();
+// Ağaçlar (Yol kenarına karlı çamlar)
+for(let i=0; i<40; i++) {
+    const treeGroup = new THREE.Group();
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(1, 4, 8), new THREE.MeshStandardMaterial({color: 0x2d4c2d}));
+    cone.position.y = 2;
+    treeGroup.add(cone);
+    treeGroup.position.set(i % 2 === 0 ? 7 : -7, 0, -i * 5);
+    scene.add(treeGroup);
 }
+
+// --- DENİZ (Yolun Sonunda) ---
+const seaGeo = new THREE.PlaneGeometry(100, 100);
+const seaMat = new THREE.MeshStandardMaterial({ color: 0x001a33, transparent: true, opacity: 0.8 });
+const sea = new THREE.Mesh(seaGeo, seaMat);
+sea.rotation.x = -Math.PI / 2;
+sea.position.set(0, -0.1, -140);
+scene.add(sea);
+
+// --- KEDİLER (Daha Belirgin) ---
+function createCat(color, eyeColor) {
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.5, 4, 8), new THREE.MeshStandardMaterial({color: color}));
+    body.rotation.x = Math.PI / 2;
+    group.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshStandardMaterial({color: color}));
+    head.position.set(0, 0.4, 0.4);
+    group.add(head);
+    const eyeGeo = new THREE.SphereGeometry(0.06);
+    const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
+    const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.12, 0.5, 0.6);
+    const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.12, 0.5, 0.6);
+    group.add(e1, e2);
+    return group;
+}
+
+const chruno33 = createCat(0xff8c00, 0x5d4037); // Turuncu kedi, kahve göz
+scene.add(chruno33);
+
+const elfexxel = createCat(0x050505, 0x00ff00); // Siyah kedi, yeşil göz
+elfexxel.position.set(0, 0, -110);
+elfexxel.rotation.y = Math.PI; 
+scene.add(elfexxel);
+
+// --- GÜLLER ---
+const roses = [];
+const colors = [0x800080, 0xff0000, 0x000000];
+for(let i=0; i<33; i++) {
+    const rose = new THREE.Group();
+    const flower = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshStandardMaterial({color: colors[i%3]}));
+    rose.add(flower);
+    rose.position.set((Math.random()-0.5)*8, 0.3, -i * 3 - 10);
+    scene.add(rose);
+    roses.push(rose);
+}
+
+// --- KONTROLLER (Mobil Uyumlu) ---
+let touchX = 0, touchY = 0;
+let isMoving = false;
+
+window.addEventListener('touchstart', e => { isMoving = true; });
+window.addEventListener('touchend', e => { isMoving = false; });
+window.addEventListener('touchmove', e => {
+    touchX = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    touchY = (e.touches[0].clientY / window.innerHeight) * 2 - 1;
+});
+
+// --- OYUN MANTIĞI ---
+let collected = 0;
+let phase = "play"; // play, final
 
 function animate() {
     requestAnimationFrame(animate);
 
     if(phase === "play") {
-        const speed = 0.2;
-        if(move.forward) chruno33.position.z -= speed;
-        if(move.backward) chruno33.position.z += speed;
-        if(move.left) chruno33.position.x -= speed;
-        if(move.right) chruno33.position.x += speed;
+        if(isMoving) {
+            chruno33.position.z -= 0.2; // İleri git
+            chruno33.position.x += touchX * 0.1; // Sağ-Sol
+            chruno33.position.y = Math.max(0, chruno33.position.y - touchY * 0.1); // Yukarı-Aşağı
+        }
 
-        // SINIRLAR (Yoldan çıkmasın)
-        chruno33.position.x = Math.max(-4.5, Math.min(4.5, chruno33.position.x));
-        chruno33.position.z = Math.max(-205, Math.min(0, chruno33.position.z));
-
-        camera.position.set(chruno33.position.x, chruno33.position.y + 3, chruno33.position.z + 8);
+        camera.position.lerp(new THREE.Vector3(chruno33.position.x, chruno33.position.y + 3, chruno33.position.z + 6), 0.1);
         camera.lookAt(chruno33.position);
 
+        // Gül toplama
         roses.forEach(r => {
             if(r.visible && chruno33.position.distanceTo(r.position) < 0.8) {
                 r.visible = false;
                 collected++;
-                document.getElementById('count').innerText = collected;
+                document.getElementById('counter').innerText = `Toplanan Güller: ${collected} / 33`;
             }
         });
 
-        if(collected >= 33 && chruno33.position.z < -200) {
+        // Final tetikleme
+        if(collected >= 33 && chruno33.position.z < -105) {
             phase = "final";
             startEnding();
         }
+    } else if(phase === "final") {
+        // Deniz dalgalanma efekti
+        sea.position.y = Math.sin(Date.now() * 0.002) * 0.1;
     }
-
-    [chruno33, elfexxel].forEach(cat => {
-        const p = cat.position.clone().project(camera);
-        cat.userData.label.style.left = (p.x + 1)/2 * window.innerWidth + 'px';
-        cat.userData.label.style.top = (-p.y + 1)/2 * window.innerHeight + 'px';
-    });
-
-    snow.position.y -= 0.05; if(snow.position.y < -20) snow.position.y = 30;
-    sea.position.y = Math.sin(Date.now()*0.001)*0.2 - 0.5;
 
     renderer.render(scene, camera);
 }
 
 function startEnding() {
-    chruno33.position.set(0, 0, -201.2);
-    camera.position.set(0, 0.6, -198);
-    camera.lookAt(0, 0.5, -202);
-    document.querySelector('.controls').style.display = 'none';
-    document.getElementById('final-ui').style.display = 'flex';
-    setTimeout(() => document.getElementById('b1').style.opacity = 1, 1000);
-    setTimeout(() => document.getElementById('b2').style.opacity = 1, 3000);
-    setTimeout(() => document.getElementById('b3').style.opacity = 1, 5000);
+    // Kediler birbirine yaklaşır
+    chruno33.position.set(0, 0, -109.2);
+    
+    // Kamera Zoom
+    camera.position.set(0, 0.8, -107);
+    camera.lookAt(0, 0.5, -110);
+
+    setTimeout(() => {
+        document.getElementById('bubble-black').style.display = "block";
+        document.getElementById('bubble-black').style.left = "60%";
+        document.getElementById('bubble-black').style.top = "30%";
+        
+        setTimeout(() => {
+            document.getElementById('bubble-orange').style.display = "block";
+            document.getElementById('bubble-orange').style.left = "20%";
+            document.getElementById('bubble-orange').style.top = "30%";
+            
+            setTimeout(() => {
+                const loveMsg = document.getElementById('love-message');
+                loveMsg.style.display = "block";
+                loveMsg.innerHTML = "elfexxel'den sevgilim chruno33'e <br><br> 😛";
+            }, 2000);
+        }, 2000);
+    }, 1000);
 }
 
-window.onload = init;
+animate();
 </script>
 </body>
 </html>
