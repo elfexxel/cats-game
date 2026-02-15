@@ -6,12 +6,36 @@
     <title>Chruno33 & Elfexxel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; touch-action: none; }
+        /* Metin seçimini ve mobil vurguları her yerde engelliyoruz */
+        * {
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+        }
+
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        
         #ui-layer { position: fixed; top: 15px; width: 100%; text-align: center; color: #ff00ea; font-size: 24px; z-index: 100; font-weight: bold; text-shadow: 2px 2px 4px #000; pointer-events: none; }
         
-        /* KONTROL BUTONLARI */
         .controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3, 75px); grid-gap: 15px; z-index: 500; }
-        .btn { width: 75px; height: 75px; background: rgba(255,255,255,0.25); border: 2px solid white; border-radius: 20px; display: flex; justify-content: center; align-items: center; color: white; font-size: 35px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        .btn { 
+            width: 75px; 
+            height: 75px; 
+            background: rgba(255,255,255,0.25); 
+            border: 2px solid white; 
+            border-radius: 20px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            color: white; 
+            font-size: 35px;
+            /* Uzun basınca menü çıkmasını engeller */
+            -webkit-touch-callout: none;
+        }
+        
         .btn:active { background: rgba(255, 105, 180, 0.5); }
         .up { grid-column: 2; } .left { grid-column: 1; } .down { grid-column: 2; } .right { grid-column: 3; }
 
@@ -20,9 +44,7 @@
         #overlay { position: fixed; inset: 0; background: black; color: white; display: flex; justify-content: center; align-items: center; z-index: 2000; font-size: 20px; cursor: pointer; }
     </style>
 </head>
-<body>
-
-<div id="overlay" onclick="startApp()">❤️ Başlamak için buraya dokun</div>
+<body oncontextmenu="return false;"> <div id="overlay" onclick="startApp()">❤️ Başlamak için dokun</div>
 <div id="ui-layer">Toplanan Güller: <span id="count">0</span> / 33</div>
 
 <div class="controls" id="joystick" style="display:none;">
@@ -74,7 +96,7 @@ function createDetailedCat(color, eyeColor) {
     earR.position.x = -0.2;
     cat.add(earR);
 
-    // Gözler (Tam istediğin renkler)
+    // Gözler
     const eyeGeo = new THREE.SphereGeometry(0.07, 8, 8);
     const eyeMat = new THREE.MeshBasicMaterial({color: eyeColor});
     const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
@@ -84,12 +106,12 @@ function createDetailedCat(color, eyeColor) {
     eyeR.position.x = -0.15;
     cat.add(eyeR);
 
-    // Burun ve Bıyıklar
+    // Burun
     const nose = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color: 0xffaaaa}));
     nose.position.set(0, 0.45, 0.8);
     cat.add(nose);
 
-    // Bacaklar (4 adet)
+    // Bacaklar
     const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.4);
     for(let i=0; i<4; i++) {
         const leg = new THREE.Mesh(legGeo, mat);
@@ -103,7 +125,7 @@ function createDetailedCat(color, eyeColor) {
     tail.rotation.x = -Math.PI/4;
     cat.add(tail);
 
-    // Dudak (Gizli)
+    // Dudak
     const lip = new THREE.Mesh(new THREE.CapsuleGeometry(0.04, 0.08), new THREE.MeshBasicMaterial({color: 0xff1493}));
     lip.position.set(0, 0.38, 0.8);
     lip.visible = false;
@@ -126,18 +148,15 @@ function setupScene() {
 
     scene.add(new THREE.AmbientLight(0xffffff, 2.5));
 
-    // PATİKA
     path = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 200), new THREE.MeshStandardMaterial({color: 0xffffff}));
     path.position.set(0, -0.2, -90);
     scene.add(path);
 
-    // KEDİLER (Gerçek Form)
-    chruno33 = createDetailedCat(0xffa500, 0x5d4037); // Kahverengi göz
-    elfexxel = createDetailedCat(0x111111, 0x00ff00); // Yeşil göz
+    chruno33 = createDetailedCat(0xffa500, 0x5d4037);
+    elfexxel = createDetailedCat(0x111111, 0x00ff00);
     elfexxel.visible = false;
     scene.add(chruno33, elfexxel);
 
-    // BUKET
     bouquet = new THREE.Group();
     const bCols = [0xff0000, 0x800080, 0x111111];
     for(let i=0; i<15; i++) {
@@ -148,10 +167,9 @@ function setupScene() {
     bouquet.visible = false;
     scene.add(bouquet);
 
-    // GÜLLER (Yol sınırları içinde!)
     for(let i=0; i<40; i++) {
         const r = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshStandardMaterial({color: bCols[i%3]}));
-        r.position.set((Math.random()-0.5)*7, 0.2, -i*4.8 - 20); // 7 birim genişlik yola sabitler
+        r.position.set((Math.random()-0.5)*7, 0.2, -i*4.8 - 20);
         scene.add(r); roses.push(r);
     }
 
@@ -162,12 +180,15 @@ function setupScene() {
     snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.12}));
     scene.add(snow);
 
-    // KESİN KONTROL SİSTEMİ (Takılma yapmaz)
+    // KONTROL DÜZELTMESİ: preventDefault ile her türlü varsayılan mobil hareketi engelliyoruz
     const btn = (id, k) => {
         const el = document.getElementById(id);
-        el.addEventListener('pointerdown', (e) => { e.preventDefault(); moveKeys[k] = true; });
-        el.addEventListener('pointerup', (e) => { e.preventDefault(); moveKeys[k] = false; });
-        el.addEventListener('pointerleave', (e) => { e.preventDefault(); moveKeys[k] = false; });
+        const start = (e) => { e.preventDefault(); moveKeys[k] = true; };
+        const stop = (e) => { e.preventDefault(); moveKeys[k] = false; };
+        
+        el.addEventListener('touchstart', start, {passive: false});
+        el.addEventListener('touchend', stop, {passive: false});
+        el.addEventListener('touchcancel', stop, {passive: false});
     };
     btn('b-up', 'up'); btn('b-down', 'down'); btn('b-left', 'left'); btn('b-right', 'right');
 
@@ -183,7 +204,6 @@ function animate() {
         if(moveKeys.left) chruno33.position.x -= s;
         if(moveKeys.right) chruno33.position.x += s;
 
-        // SINIRLAR
         chruno33.position.x = Math.max(-4.4, Math.min(4.4, chruno33.position.x));
         chruno33.position.z = Math.max(-190, Math.min(5, chruno33.position.z));
         chruno33.position.y = 0.55;
@@ -235,7 +255,6 @@ function triggerFinal() {
             elfexxel.position.z += 0.04;
             if(chruno33.position.z <= -299.1) {
                 clearInterval(walk);
-                // Sarılma/Şaha kalkma
                 chruno33.rotation.x = -Math.PI/6;
                 elfexxel.rotation.x = -Math.PI/6;
                 chruno33.position.y = 0.8;
