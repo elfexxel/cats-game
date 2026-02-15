@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Chruno33 & Elfexxel</title>
+
+<style>
+body{
+margin:0;
+overflow:hidden;
+background:black;
+font-family:cursive;
+}
+
+canvas{
+display:block;
+}
+
+#counter{
+position:absolute;
+top:10px;
+left:10px;
+color:white;
+font-size:20px;
+}
+
+#message{
+position:absolute;
+width:100%;
+top:40%;
+text-align:center;
+font-size:32px;
+color:purple;
+display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="counter">🌹 0 / 33</div>
+<div id="message"></div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let scene = "path";
+let roses = [];
+let collected = 0;
+
+let cat = {
+x:100,
+y:canvas.height/2,
+size:40
+};
+
+for(let i=0;i<33;i++){
+roses.push({
+x:200 + i*120,
+y:canvas.height/2 + (Math.random()*120-60),
+taken:false
+});
+}
+
+function drawSnow(){
+for(let i=0;i<100;i++){
+ctx.fillStyle="white";
+ctx.fillRect(Math.random()*canvas.width,
+Math.random()*canvas.height,2,2);
+}
+}
+
+function drawCat(){
+ctx.fillStyle="orange";
+ctx.beginPath();
+ctx.arc(cat.x,cat.y,cat.size,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="brown";
+ctx.beginPath();
+ctx.arc(cat.x-10,cat.y-5,5,0,Math.PI*2);
+ctx.arc(cat.x+10,cat.y-5,5,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="white";
+ctx.fillText("chruno33",cat.x-30,cat.y-50);
+}
+
+function drawRoses(){
+roses.forEach(r=>{
+if(!r.taken){
+ctx.fillStyle="purple";
+ctx.beginPath();
+ctx.arc(r.x,r.y,15,0,Math.PI*2);
+ctx.fill();
+}
+});
+}
+
+function update(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+if(scene==="path"){
+
+drawSnow();
+drawRoses();
+drawCat();
+
+roses.forEach(r=>{
+let dist=Math.hypot(cat.x-r.x,cat.y-r.y);
+if(dist<40 && !r.taken){
+r.taken=true;
+collected++;
+document.getElementById("counter").innerText="🌹 "+collected+" / 33";
+}
+});
+
+if(collected>=33){
+scene="sea";
+}
+}
+
+else if(scene==="sea"){
+drawSea();
+}
+
+requestAnimationFrame(update);
+}
+
+function drawSea(){
+
+ctx.fillStyle="#001a33";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+for(let i=0;i<canvas.width;i+=40){
+ctx.fillStyle="blue";
+ctx.fillRect(i,canvas.height/2+Math.sin(Date.now()/500+i)*10,40,20);
+}
+
+drawCatsFinal();
+}
+
+function drawCatsFinal(){
+
+// orange cat
+ctx.fillStyle="orange";
+ctx.beginPath();
+ctx.arc(canvas.width/3,canvas.height/2,50,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="white";
+ctx.fillText("chruno33",canvas.width/3-40,canvas.height/2-70);
+
+// black cat
+ctx.fillStyle="black";
+ctx.beginPath();
+ctx.arc(canvas.width/1.8,canvas.height/2,50,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="green";
+ctx.beginPath();
+ctx.arc(canvas.width/1.8-15,canvas.height/2-5,6,0,Math.PI*2);
+ctx.arc(canvas.width/1.8+15,canvas.height/2-5,6,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="white";
+ctx.fillText("elfexxel",canvas.width/1.8-40,canvas.height/2-70);
+
+setTimeout(()=>{
+showLove();
+},2000);
+}
+
+function showLove(){
+let m=document.getElementById("message");
+m.style.display="block";
+m.innerText="elfexxel'den sevgilim chruno33'e";
+}
+
+// touch control
+canvas.addEventListener("touchmove",e=>{
+cat.x=e.touches[0].clientX;
+cat.y=e.touches[0].clientY;
+});
+
+update();
+</script>
+
+</body>
+</html>
